@@ -1,0 +1,31 @@
+name: Backend
+
+on:
+  push:
+    branches: [main]
+    paths: ["api/**", "common/**", "data_preprocessing/**", "explainability/**",
+            "knowledge_graph/**", "llm/**", "models/**", "tests/**", "requirements*.txt",
+            "pyproject.toml", ".github/workflows/backend.yml"]
+  pull_request:
+    paths: ["api/**", "common/**", "data_preprocessing/**", "explainability/**",
+            "knowledge_graph/**", "llm/**", "models/**", "tests/**", "requirements*.txt",
+            "pyproject.toml", ".github/workflows/backend.yml"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+      - run: pip install -r requirements-dev.txt
+      - run: ruff check .
+      - run: mypy api common llm models data_preprocessing explainability knowledge_graph
+      # models.artifacts (trained cascade) isn't checked in — tests that need it are skipped
+      # automatically (see tests/test_trained_model.py's pytestmark); everything else runs
+      # against the real NHANES-schema code paths with synthetic data.
+      - run: pytest -q
+      - run: bandit -q -r api common llm models data_preprocessing explainability knowledge_graph
+      - run: pip-audit -r requirements.txt --skip-editable || true # advisory: pin/patch on failure, don't block merges yet
