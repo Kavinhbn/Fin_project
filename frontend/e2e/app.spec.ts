@@ -13,8 +13,16 @@ async function fillValid(page: Page) {
 }
 
 async function axe(page: Page) {
+  // Reduced motion collapses the app's CSS transitions to ~1ms (see index.css), so a scan can
+  // never catch an element mid colour-transition. Without this, a click-then-scan on a slower
+  // CI runner intermittently samples a genuinely low-contrast in-between colour and fails a
+  // real colour-contrast check on code that's actually fine at rest — a real flaky-test incident
+  // (2026-09-27: passed locally, failed in CI, on the tab bar's 100ms transition-colors).
+  await page.emulateMedia({ reducedMotion: 'reduce' })
   const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze()
-  return results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical').map((v) => `${v.id}: ${v.nodes.length} node(s) ${v.nodes[0]?.target.join(' ')}`)
+  return results.violations
+    .filter((v) => v.impact === 'serious' || v.impact === 'critical')
+    .map((v) => `${v.id}: ${v.nodes.length} node(s) ${v.nodes[0]?.target.join(' ')} — ${v.nodes[0]?.failureSummary?.replace(/\s+/g, ' ')}`)
 }
 
 test('shell shows demo banner and persistent disclaimer', async ({ page }) => {
