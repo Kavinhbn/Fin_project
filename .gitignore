@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.env
+*.tfstate
+*.tfstate.*
+.terraform/
+data/
+models/artifacts/
+*.xpt
+*.parquet
+reports/*.log
+.claude/

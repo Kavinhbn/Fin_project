@@ -1,0 +1,28 @@
+[project]
+name = "fin-comorbidity"
+version = "0.1.0"
+description = "Explainable multi-disease (Diabetes, Hypertension, CVD) risk prediction"
+requires-python = ">=3.10"
+
+[tool.setuptools]
+packages = ["common", "data_preprocessing", "models", "explainability", "knowledge_graph", "llm", "api"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+warn_unused_ignores = true
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]
+
+[[tool.mypy.overrides]]
+module = ["models.train", "models.package"]
+ignore_errors = true  # offline research scripts; core modules stay type-checked

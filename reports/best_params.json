@@ -1,0 +1,9 @@
+{
+ "max_depth": 5,
+ "learning_rate": 0.016666983286066417,
+ "subsample": 0.5325257964926398,
+ "colsample_bytree": 0.9744427686266666,
+ "n_estimators": 487,
+ "min_child_weight": 17,
+ "cv_macro_auroc": 0.8353714630960082
+}

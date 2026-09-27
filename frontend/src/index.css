@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+/* ─── Tokens (single source; never invent new hexes) ─── */
+:root {
+  --color-bg: #F0F3F7; --color-surface: #FFF; --color-surface-2: #F7F9FB;
+  --color-border: #E1E6EB; --color-border-strong: #CBD2DA;
+  --color-brand: #0B4F6C; --color-brand-light: #E6F0F4; --color-brand-dark: #083A50;
+  --color-approved: #10B981; --color-approved-bg: #ECFDF5;
+  --color-warning: #F59E0B; --color-warning-bg: #FFFBEB;
+  --color-error: #EF4444; --color-error-bg: #FEF2F2;
+  --color-violet: #8B5CF6; --color-violet-bg: #F5F3FF;
+  --color-sky: #0EA5E9; --color-sky-bg: #F0F9FF;
+  --color-bg-subtle: #FBFBFB; --color-scrim: rgba(15,23,42,.4);
+  --color-muted: #94A3B8; --color-muted-bg: #F8FAFC;
+  --color-text-primary: #0F172A; --color-text-secondary: #5B6779; --color-text-tertiary: #94A3B8;
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px; --space-6: 24px; --space-8: 32px;
+  --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px; --radius-xl: 16px; --radius-pill: 999px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.05); --shadow-md: 0 4px 12px rgba(0,0,0,.08);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,.12); --shadow-xl: 0 16px 48px rgba(0,0,0,.16);
+  --ease-out: cubic-bezier(.23,1,.32,1); --ease-drawer: cubic-bezier(.32,.72,0,1);
+  --font-display: 'DM Sans', system-ui, sans-serif; --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --text-xs: .6875rem; --text-sm: .8125rem; --text-base: .875rem; --text-md: 1rem;
+  --text-lg: 1.25rem; --text-xl: 1.5rem; --text-2xl: 2rem;
+  --sidebar-w: 240px; --sidebar-w-collapsed: 72px; --topbar-h: 64px;
+}
+
+html { font-size: 16px; }
+@media (max-width: 1440px) { html { font-size: 15px; } }
+@media (max-width: 1280px) { html { font-size: 14px; } }
+
+/* The app shell manages its own internal scroll regions (each screen scrolls itself via
+   overflow-y-auto), so the page itself must never scroll. Without this, Chromium can still
+   expose a phantom page-level scrollbar/blank area below already-correctly-contained content
+   — a known quirk with nested overflow-auto app-shells. */
+html, body, #root { height: 100%; overflow: hidden; }
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible { outline: 2px solid var(--color-brand); outline-offset: 2px; }
+
+/* ─── Shared text helpers ─── */
+.eyebrow {
+  font-size: 10px; font-weight: 800; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--color-text-secondary);
+}
+.font-display { font-family: var(--font-display); }
+.font-mono-fig { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* ─── Table helpers ─── */
+.custom-table-head {
+  position: sticky; top: 0; z-index: 1; display: flex; background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border-strong);
+}
+.custom-table-row {
+  position: relative; display: flex; align-items: center; background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border); cursor: pointer;
+  transition: background 120ms var(--ease-out);
+}
+.custom-table-row::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+  background: var(--color-brand); opacity: 0; transition: opacity 120ms var(--ease-out);
+}
+.custom-table-row:hover, .custom-table-row:focus-visible { background: var(--color-surface-2); }
+.custom-table-row:hover::before, .custom-table-row:focus-visible::before { opacity: 1; }
+
+/* ─── Motion ─── */
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes modal-in { from { opacity: 0; transform: scale(.98) translateY(4px); } to { opacity: 1; transform: none; } }
+@keyframes drawer-in { from { transform: translateX(100%); } to { transform: none; } }
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+.anim-fade { animation: fade-in 200ms var(--ease-out); }
+.anim-modal { animation: modal-in 150ms var(--ease-out); }
+.anim-drawer { animation: drawer-in 350ms var(--ease-drawer); }
+.skeleton {
+  background: linear-gradient(90deg, var(--color-border) 25%, var(--color-surface-2) 50%, var(--color-border) 75%);
+  background-size: 200% 100%; animation: shimmer 1.6s linear infinite; border-radius: var(--radius-sm);
+}
+.spin { animation: spin 700ms linear infinite; }
+.card-lift { transition: transform 150ms var(--ease-out), box-shadow 150ms var(--ease-out); }
+.card-lift:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(11,79,108,.12); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }
+  .card-lift:hover { transform: none; }
+}

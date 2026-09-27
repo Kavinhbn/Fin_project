@@ -1,0 +1,26 @@
+{
+ "alpha": 0.1,
+ "target_per_label": 0.9,
+ "target_joint_bonferroni": 0.7,
+ "coverage_per_label": {
+  "diabetes": 0.9008144796380091,
+  "hypertension": 0.9147511312217195,
+  "cvd": 0.8895927601809954
+ },
+ "coverage_joint": 0.7529411764705882,
+ "uncertain_rate": {
+  "diabetes": 0.40452488687782806,
+  "hypertension": 0.43710407239819005,
+  "cvd": 0.33647058823529413
+ },
+ "empty_rate": {
+  "diabetes": 0.0,
+  "hypertension": 0.0,
+  "cvd": 0.0
+ },
+ "mean_set_size": {
+  "diabetes": 1.404524886877828,
+  "hypertension": 1.43710407239819,
+  "cvd": 1.336470588235294
+ }
+}
