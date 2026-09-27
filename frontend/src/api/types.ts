@@ -154,9 +154,16 @@ export class ApiError extends Error {
   }
 }
 
+export interface AuthConfig {
+  mode: 'dev' | 'iap' | 'mock'
+}
+
 export interface Api {
   isMock: boolean
   me(): Promise<Me>
+  authConfig(): Promise<AuthConfig>
+  /** Dev mode only; the backend 404s this outside dev mode. */
+  devLogin(name: string, role: Role): Promise<Me>
   disclaimer(): Promise<string>
   notice(): Promise<string | null>
   createAssessment(input: PatientInput, mode: FeatureMode): Promise<Assessment>

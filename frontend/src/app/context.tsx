@@ -2,14 +2,17 @@ import { createContext, useContext } from 'react'
 import type { FeatureMode, Me } from '../api/types'
 
 // ─── App-wide context: identity (server claims), feature mode, navigation ───
-export type Screen = 'assess' | 'assessments' | 'evidence' | 'audit'
+export type Screen = 'assess' | 'assessments' | 'evidence' | 'audit' | 'settings' | 'help'
 
 export interface AppState {
   me: Me
+  setMe: (me: Me) => void
   mode: FeatureMode
   setMode: (m: FeatureMode) => void
   disclaimer: string
   isMock: boolean
+  /** 'dev' means the Settings screen's role switcher applies; 'iap'/'mock' means it doesn't. */
+  authMode: 'dev' | 'iap' | 'mock'
   screen: Screen
   go: (s: Screen) => void
   openId: string | null

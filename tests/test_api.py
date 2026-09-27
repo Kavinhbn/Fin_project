@@ -149,3 +149,41 @@ def test_iap_mode_requires_valid_token():
 def test_iap_mode_needs_audience():
     with pytest.raises(ValueError):
         Settings(auth_mode="iap")
+
+
+def test_auth_config_reports_mode(client):
+    assert client.get("/auth/config").json() == {"mode": "dev"}
+    iap = TestClient(create_app(settings=Settings(auth_mode="iap", iap_audience="aud"),
+                                repo=InMemoryRepository(), model=PlaceholderModel(),
+                                jwt_verifier=lambda t, a: {"email": t}))
+    assert iap.get("/auth/config").json() == {"mode": "iap"}
+
+
+def test_dev_login_sets_identity_via_cookie(client):
+    r = client.post("/auth/dev-login", json={"name": "Dr. Rao", "role": "admin"})
+    assert r.status_code == 200
+    assert r.json() == {"email": "dev@example.org", "name": "Dr. Rao", "role": "admin"}
+    assert client.get("/me").json() == {"email": "dev@example.org", "name": "Dr. Rao", "role": "admin"}
+    assert client.get("/audit").status_code == 200  # now actually admin, not just via header
+
+
+def test_dev_login_rejects_bad_role(client):
+    assert client.post("/auth/dev-login", json={"name": "x", "role": "superuser"}).status_code == 422
+
+
+def test_dev_login_blank_name_falls_back_to_default(client):
+    client.post("/auth/dev-login", json={"name": "   ", "role": "viewer"})
+    assert client.get("/me").json()["name"] == "Dev User"
+
+
+def test_dev_login_unavailable_outside_dev_mode():
+    c = TestClient(create_app(settings=Settings(auth_mode="iap", iap_audience="aud"),
+                              repo=InMemoryRepository(), model=PlaceholderModel(),
+                              jwt_verifier=lambda t, a: {"email": t}))
+    assert c.post("/auth/dev-login", json={"name": "x", "role": "admin"}).status_code == 404
+
+
+def test_dev_login_cookie_overrides_header(client):
+    client.post("/auth/dev-login", json={"name": "Cookie User", "role": "viewer"})
+    r = client.get("/me", headers={"X-Dev-Role": "admin"})  # cookie takes priority
+    assert r.json()["role"] == "viewer"

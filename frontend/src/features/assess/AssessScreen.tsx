@@ -17,29 +17,31 @@ import { EmptyState, RoleNotice, SkeletonRows } from '../../ui/States'
 // ─── Form schema (one generic renderer) ───
 const range = (k: keyof typeof RANGES): string => `${RANGES[k][0]}–${RANGES[k][1]}`
 
+// Every `help` string here is the short, plain-language explanation also shown in full (with
+// a "why it matters" line) on the Help & glossary page — see features/help/content.ts.
 const SCHEMA: readonly FieldSchema[] = [
   { kind: 'number', name: 'age', label: 'Age', unit: 'years', hint: range('age'), required: true },
   { kind: 'radio', name: 'sex', label: 'Sex', required: true, options: [{ value: 'female', label: 'Female' }, { value: 'male', label: 'Male' }] },
-  { kind: 'number', name: 'bmi', label: 'BMI', unit: 'kg/m²', hint: range('bmi'), required: true },
-  { kind: 'number', name: 'sbp', label: 'Systolic BP', unit: 'mmHg', hint: range('sbp') },
-  { kind: 'number', name: 'dbp', label: 'Diastolic BP', unit: 'mmHg', hint: range('dbp') },
-  { kind: 'number', name: 'fasting_glucose', label: 'Fasting glucose', unit: 'mg/dL', hint: range('fasting_glucose') },
-  { kind: 'number', name: 'hba1c', label: 'HbA1c', unit: '%', hint: range('hba1c') },
-  { kind: 'number', name: 'total_cholesterol', label: 'Total cholesterol', unit: 'mg/dL', hint: range('total_cholesterol') },
-  { kind: 'number', name: 'hdl', label: 'HDL', unit: 'mg/dL', hint: range('hdl') },
-  { kind: 'number', name: 'ldl', label: 'LDL', unit: 'mg/dL', hint: range('ldl') },
-  { kind: 'number', name: 'triglycerides', label: 'Triglycerides', unit: 'mg/dL', hint: range('triglycerides') },
+  { kind: 'number', name: 'bmi', label: 'BMI', unit: 'kg/m²', hint: range('bmi'), required: true, help: 'Body Mass Index — a simple number from weight and height that estimates body fat.' },
+  { kind: 'number', name: 'sbp', label: 'Systolic BP', unit: 'mmHg', hint: range('sbp'), help: 'The top (higher) number in a blood pressure reading — the pressure when the heart beats.' },
+  { kind: 'number', name: 'dbp', label: 'Diastolic BP', unit: 'mmHg', hint: range('dbp'), help: 'The bottom (lower) number in a blood pressure reading — the pressure when the heart rests between beats.' },
+  { kind: 'number', name: 'fasting_glucose', label: 'Fasting glucose', unit: 'mg/dL', hint: range('fasting_glucose'), help: 'Blood sugar level measured after not eating for several hours (usually overnight).' },
+  { kind: 'number', name: 'hba1c', label: 'HbA1c', unit: '%', hint: range('hba1c'), help: 'A blood test showing average blood sugar over the past 2–3 months, not just right now.' },
+  { kind: 'number', name: 'total_cholesterol', label: 'Total cholesterol', unit: 'mg/dL', hint: range('total_cholesterol'), help: 'The overall amount of cholesterol (a fat-like substance) in the blood.' },
+  { kind: 'number', name: 'hdl', label: 'HDL', unit: 'mg/dL', hint: range('hdl'), help: 'The "good" cholesterol — it helps clear other cholesterol out of the blood. Low HDL raises risk.' },
+  { kind: 'number', name: 'ldl', label: 'LDL', unit: 'mg/dL', hint: range('ldl'), help: 'The "bad" cholesterol — the kind that builds up in artery walls.' },
+  { kind: 'number', name: 'triglycerides', label: 'Triglycerides', unit: 'mg/dL', hint: range('triglycerides'), help: 'Another type of fat carried in the blood, separate from cholesterol.' },
   { kind: 'radio', name: 'smoker', label: 'Smoking', options: [{ value: 'yes', label: 'Current or former smoker' }, { value: 'no', label: 'Never smoked' }, { value: '', label: 'Unknown' }] },
 ]
 
 // Optional fields not part of a routine checkup, but that measurably improve model accuracy
 // when available (see PROJECT_PLAN.md). Never required.
 const OPTIONAL_SCHEMA: readonly FieldSchema[] = [
-  { kind: 'radio', name: 'race_ethnicity', label: 'Race / ethnicity', options: [{ value: '', label: 'Prefer not to say' }, ...RACE_ETHNICITY_OPTIONS.map((o) => ({ value: String(o.value), label: o.label }))] },
-  { kind: 'radio', name: 'education', label: 'Education', options: [{ value: '', label: 'Prefer not to say' }, ...EDUCATION_OPTIONS.map((o) => ({ value: String(o.value), label: o.label }))] },
-  { kind: 'number', name: 'income_ratio', label: 'Income-to-poverty ratio', hint: `${RANGES.income_ratio[0]}–${RANGES.income_ratio[1]}, higher is wealthier` },
-  { kind: 'radio', name: 'vigorous_activity', label: 'Regular vigorous activity', options: [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }, { value: '', label: 'Unknown' }] },
-  { kind: 'radio', name: 'alcohol_12plus', label: 'Regular alcohol use (12+ drinks/year)', options: [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }, { value: '', label: 'Unknown' }] },
+  { kind: 'radio', name: 'race_ethnicity', label: 'Race / ethnicity', help: 'From the checkup record. Including it measurably improves the model\'s accuracy on the population it was trained on.', options: [{ value: '', label: 'Prefer not to say' }, ...RACE_ETHNICITY_OPTIONS.map((o) => ({ value: String(o.value), label: o.label }))] },
+  { kind: 'radio', name: 'education', label: 'Education', help: 'Highest level of school completed. Correlates with lifestyle and healthcare-access patterns linked to risk.', options: [{ value: '', label: 'Prefer not to say' }, ...EDUCATION_OPTIONS.map((o) => ({ value: String(o.value), label: o.label }))] },
+  { kind: 'number', name: 'income_ratio', label: 'Income-to-poverty ratio', hint: `${RANGES.income_ratio[0]}–${RANGES.income_ratio[1]}, higher is wealthier`, help: 'Household income compared to the poverty line — 1.0 means exactly at the line, higher means wealthier. Capped at 5.' },
+  { kind: 'radio', name: 'vigorous_activity', label: 'Regular vigorous activity', help: 'Regularly doing hard exercise — the kind that gets you breathing heavily (running, heavy lifting, fast cycling).', options: [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }, { value: '', label: 'Unknown' }] },
+  { kind: 'radio', name: 'alcohol_12plus', label: 'Regular alcohol use (12+ drinks/year)', help: 'Whether the patient has had 12 or more alcoholic drinks in the past year.', options: [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }, { value: '', label: 'Unknown' }] },
 ]
 
 type FormValues = Record<string, string>

@@ -1,11 +1,16 @@
+import { Info } from 'lucide-react'
 import { useId } from 'react'
 import { cx } from './cx'
+import { Tooltip } from './Tooltip'
 
 // ─── Schema-driven fields: one generic renderer for number / radio / text ───
+// `help` is a plain-language explanation for a field whose label alone is jargon (e.g. "HbA1c").
+// It shows as an info icon next to the label — hover or keyboard-focus to read it — rather than
+// renaming the label itself, so the field stays precisely identifiable to a clinician.
 export type FieldSchema =
-  | { kind: 'number'; name: string; label: string; unit?: string; hint?: string; required?: boolean }
-  | { kind: 'radio'; name: string; label: string; options: readonly { value: string; label: string }[]; required?: boolean }
-  | { kind: 'text'; name: string; label: string; required?: boolean }
+  | { kind: 'number'; name: string; label: string; unit?: string; hint?: string; required?: boolean; help?: string }
+  | { kind: 'radio'; name: string; label: string; options: readonly { value: string; label: string }[]; required?: boolean; help?: string }
+  | { kind: 'text'; name: string; label: string; required?: boolean; help?: string }
 
 interface FieldProps {
   schema: FieldSchema
@@ -18,11 +23,23 @@ interface FieldProps {
 export function Field({ schema, value, error, disabled, onChange }: FieldProps) {
   const id = useId()
   const errId = `${id}-err`
+  // The info button's accessible name deliberately does NOT include the field's own label text
+  // (e.g. it says "More information", not "What is BMI?") — otherwise nesting it inside
+  // <label>/<legend> makes that text part of the field's accessible name too, and
+  // getByLabel('BMI') starts matching both the input and this button (a real regression this
+  // caused once: fixed by generalising the button's name instead of restructuring the DOM).
   const label = (
-    <span className="eyebrow">
+    <span className="eyebrow inline-flex items-center gap-1">
       {schema.label}
       {schema.kind === 'number' && schema.unit ? <span className="ml-1 normal-case tracking-normal font-medium">({schema.unit})</span> : null}
       {schema.required ? <span aria-hidden> *</span> : null}
+      {schema.help && (
+        <Tooltip text={schema.help}>
+          <button type="button" aria-label="More information" className="inline-flex text-[var(--color-text-tertiary)] hover:text-[var(--color-brand)]">
+            <Info size={13} aria-hidden />
+          </button>
+        </Tooltip>
+      )}
     </span>
   )
 

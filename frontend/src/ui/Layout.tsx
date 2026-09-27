@@ -74,7 +74,9 @@ export function TabShell({ header, tabs, children, bare = false }: { header: Rea
           {header}
           <div className="mt-4">{tabs}</div>
         </div>
-        <div className="min-h-0 flex-1 overflow-auto bg-[var(--color-bg-subtle)]">{children}</div>
+        {/* tabIndex makes this reachable by keyboard when its content overflows — otherwise a
+            keyboard-only user has no way to scroll it (axe: scrollable-region-focusable). */}
+        <div tabIndex={0} className="min-h-0 flex-1 overflow-auto bg-[var(--color-bg-subtle)] focus-visible:outline focus-visible:-outline-offset-2 focus-visible:outline-[var(--color-brand)]">{children}</div>
       </div>
     </div>
   )

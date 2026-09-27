@@ -196,4 +196,53 @@ test.describe('accessibility (axe, serious/critical only)', () => {
       expect(await axe(page), name).toEqual([])
     }
   })
+  test('settings and help screens', async ({ page }) => {
+    await page.goto('/')
+    const nav = page.getByRole('navigation', { name: 'Primary' })
+    await nav.getByRole('button', { name: 'Settings' }).click()
+    expect(await axe(page), 'Settings').toEqual([])
+    await nav.getByRole('button', { name: 'Help & glossary' }).click()
+    for (const name of ['Getting started', 'Patient fields', 'Results & badges', 'Explanations', 'Model & evidence', 'Safety & limits']) {
+      await page.getByRole('tab', { name }).click()
+      expect(await axe(page), `Help > ${name}`).toEqual([])
+    }
+  })
+})
+
+test('help page: every tab is reachable and shows content', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Help & glossary' }).click()
+  await expect(page.getByRole('heading', { name: 'Help & glossary' })).toBeVisible()
+  const tabs = ['Getting started', 'Patient fields', 'Results & badges', 'Explanations', 'Model & evidence', 'Safety & limits']
+  for (const name of tabs) {
+    await page.getByRole('tab', { name }).click()
+    await expect(page.getByRole('tab', { name })).toHaveAttribute('aria-selected', 'true')
+  }
+  // Field glossary explains a genuinely confusing term
+  await page.getByRole('tab', { name: 'Patient fields' }).click()
+  await expect(page.getByText('the "bad" cholesterol', { exact: false })).toBeVisible()
+  await page.screenshot({ path: `${SHOTS}/12-help.png` })
+})
+
+test('info tooltip on a form field shows a plain-language explanation', async ({ page }) => {
+  await page.goto('/')
+  const hbaHelp = page.getByLabel('HbA1c').locator('..').getByRole('button', { name: 'More information' })
+  await hbaHelp.focus()
+  await expect(page.getByText('average blood sugar over the past 2', { exact: false })).toBeVisible()
+})
+
+test('settings: shows identity and lets you switch role in dev/mock mode', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Settings' }).click()
+  await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible()
+  await expect(page.getByText('clinician@example.org')).toBeVisible()
+
+  await page.getByLabel('Name').fill('Dr. Example')
+  await page.getByRole('combobox', { name: 'Role' }).click()
+  await page.getByRole('option', { name: /Admin/ }).click()
+  await page.getByRole('button', { name: 'Switch' }).click()
+  await expect(page.getByText(/Signed in as Dr\. Example \(admin\)/)).toBeVisible()
+
+  // The switch actually took effect: admin-only nav item appears
+  await expect(page.getByRole('button', { name: 'Audit log' })).toBeVisible()
 })

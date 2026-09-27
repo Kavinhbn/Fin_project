@@ -41,12 +41,24 @@ def role_for(email: str, settings: Settings) -> Role:
     return "viewer"
 
 
+DEV_ROLE_COOKIE = "triad_dev_role"
+DEV_NAME_COOKIE = "triad_dev_name"
+
+
 def authenticate(request: Request, settings: Settings, verifier: JwtVerifier = verify_iap_jwt) -> Me:
-    """Return the caller's identity or raise 401."""
+    """Return the caller's identity or raise 401.
+
+    Dev mode identity, in priority order: the `/auth/dev-login` cookie (set from the UI's
+    Settings screen), then the `X-Dev-Role` header (for scripts/tests), then the server's
+    configured default. None of this exists in `iap` mode.
+    """
     if settings.auth_mode == "dev":
+        cookie_role = request.cookies.get(DEV_ROLE_COOKIE, "")
         header_role = request.headers.get("x-dev-role", "")
-        role: Role = header_role if header_role in ("clinician", "viewer", "admin") else settings.dev_role  # type: ignore[assignment]
-        return Me(email=settings.dev_email, name="Dev User", role=role)
+        picked = cookie_role or header_role
+        role: Role = picked if picked in ("clinician", "viewer", "admin") else settings.dev_role  # type: ignore[assignment]
+        name = request.cookies.get(DEV_NAME_COOKIE) or "Dev User"
+        return Me(email=settings.dev_email, name=name, role=role)
 
     token = request.headers.get(IAP_HEADER)
     if not token:

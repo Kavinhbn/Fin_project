@@ -7,9 +7,10 @@ from collections.abc import Awaitable, Callable
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 from api import service
-from api.auth import JwtVerifier, authenticate, verify_iap_jwt
+from api.auth import DEV_NAME_COOKIE, DEV_ROLE_COOKIE, JwtVerifier, authenticate, verify_iap_jwt
 from api.ratelimit import RateLimiter
 from api.settings import Settings
 from api.store import InMemoryRepository, Repository
@@ -29,6 +30,15 @@ from models.placeholder import PlaceholderModel
 from models.trained import TrainedRiskModel
 
 log = logging.getLogger("api")
+
+class DevLoginRequest(BaseModel):
+    """Dev-mode-only identity switch (see /auth/dev-login). Must be module-level: with
+    `from __future__ import annotations`, FastAPI can't resolve a class defined inside a
+    function as a request-body type — it silently falls back to treating it as a query param."""
+
+    name: str
+    role: str
+
 
 SECURITY_HEADERS = {
     "X-Content-Type-Options": "nosniff",
@@ -91,6 +101,24 @@ def create_app(
     @app.get("/health")
     def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    @app.get("/auth/config")
+    def auth_config() -> dict[str, str]:
+        """Public (no auth): tells the UI whether the dev-only 'switch role' control applies."""
+        return {"mode": cfg.auth_mode}
+
+    @app.post("/auth/dev-login", response_model=Me)
+    def dev_login(body: DevLoginRequest, response: Response) -> Me:
+        """Dev mode only: sets an identity cookie so the UI can switch role without editing a
+        URL or a header by hand. Refuses outright in iap mode — there is no real login here."""
+        if cfg.auth_mode != "dev":
+            raise HTTPException(status_code=404, detail="Not available outside dev mode")
+        if body.role not in ("clinician", "viewer", "admin"):
+            raise HTTPException(status_code=422, detail="role must be clinician, viewer or admin")
+        name = body.name.strip()[:60] or "Dev User"
+        response.set_cookie(DEV_ROLE_COOKIE, body.role, httponly=True, samesite="lax", max_age=60 * 60 * 24 * 30)
+        response.set_cookie(DEV_NAME_COOKIE, name, httponly=True, samesite="lax", max_age=60 * 60 * 24 * 30)
+        return Me(email=cfg.dev_email, name=name, role=body.role)  # type: ignore[arg-type]
 
     @app.get("/me", response_model=Me)
     def me(user: Me = Depends(current_user)) -> Me:

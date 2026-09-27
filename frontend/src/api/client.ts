@@ -1,7 +1,7 @@
 // ─── Adapter selection: VITE_API_MODE=mock (default) | live ───
 import { mockApi } from './mock'
 import { ApiError } from './types'
-import type { Api } from './types'
+import type { Api, AuthConfig, Role } from './types'
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${import.meta.env.VITE_API_URL ?? ''}${path}`, {
@@ -35,6 +35,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 const liveApi: Api = {
   isMock: false,
   me: () => request('/me'),
+  authConfig: (): Promise<AuthConfig> => request('/auth/config'),
+  devLogin: (name, role) => request('/auth/dev-login', { method: 'POST', body: JSON.stringify({ name, role: role satisfies Role }) }),
   disclaimer: async () => (await request<{ disclaimer: string }>('/disclaimer')).disclaimer,
   notice: async () => (await request<{ notice: string | null }>('/disclaimer')).notice,
   createAssessment: (input, mode) =>

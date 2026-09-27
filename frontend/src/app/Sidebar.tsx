@@ -1,4 +1,4 @@
-import { ClipboardList, PanelLeftClose, PanelLeftOpen, Scale, ScrollText, Stethoscope } from 'lucide-react'
+import { CircleHelp, ClipboardList, PanelLeftClose, PanelLeftOpen, Scale, ScrollText, Settings, Stethoscope } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { cx } from '../ui/cx'
@@ -18,6 +18,10 @@ const NAV: readonly NavGroup[] = [
   { title: '02 Governance', items: [
     { screen: 'evidence', label: 'Model & evidence', icon: Scale },
     { screen: 'audit', label: 'Audit log', icon: ScrollText, roles: ['admin'] },
+  ] },
+  { title: '03 Account', items: [
+    { screen: 'settings', label: 'Settings', icon: Settings },
+    { screen: 'help', label: 'Help & glossary', icon: CircleHelp },
   ] },
 ]
 

@@ -33,3 +33,23 @@ test('UI talks to the real backend end to end', async ({ page }) => {
   await expect(page.getByText('Macro AUROC')).toBeVisible()
   await expect(page.getByText(/Conformal coverage/)).toBeVisible()
 })
+
+test('dev-login actually switches identity against the real backend', async ({ page }) => {
+  await page.goto('/')
+  const nav = page.getByRole('navigation', { name: 'Primary' })
+  await nav.getByRole('button', { name: 'Settings' }).click()
+  await expect(page.getByText('Dev mode (no real login)')).toBeVisible()
+  await expect(page.getByText('dev@example.org')).toBeVisible()
+
+  await page.getByLabel('Name').fill('Dr. Live Test')
+  await page.getByRole('combobox', { name: 'Role' }).click()
+  await page.getByRole('option', { name: /Admin/ }).click()
+  await page.getByRole('button', { name: 'Switch' }).click()
+  await expect(page.getByText(/Signed in as Dr\. Live Test \(admin\)/)).toBeVisible()
+  await expect(page.locator('header').getByText('Dr. Live Test')).toBeVisible()
+
+  // A cookie-backed session, not a client-side illusion: reloading the page keeps the identity.
+  await page.reload()
+  await expect(page.locator('header').getByText('Dr. Live Test')).toBeVisible()
+  await expect(nav.getByRole('button', { name: 'Audit log' })).toBeVisible()
+})

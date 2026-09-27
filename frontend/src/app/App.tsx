@@ -5,6 +5,8 @@ import { AssessScreen } from '../features/assess/AssessScreen'
 import { AssessmentsScreen } from '../features/assessments/AssessmentsScreen'
 import { AuditScreen } from '../features/audit/AuditScreen'
 import { EvidenceScreen } from '../features/evidence/EvidenceScreen'
+import { HelpScreen } from '../features/help/HelpScreen'
+import { SettingsScreen } from '../features/settings/SettingsScreen'
 import { FeedbackProvider } from '../ui/Feedback'
 import { ErrorState, SkeletonRows } from '../ui/States'
 import { TooltipProvider } from '../ui/Tooltip'
@@ -15,6 +17,7 @@ import { Sidebar } from './Sidebar'
 // ─── App shell ───
 export function App() {
   const [me, setMe] = useState<Me | undefined>()
+  const [authMode, setAuthMode] = useState<'dev' | 'iap' | 'mock'>('mock')
   const [disclaimer, setDisclaimer] = useState('')
   const [notice, setNotice] = useState<string | null>(null)
   const [error, setError] = useState<string | undefined>()
@@ -24,8 +27,8 @@ export function App() {
 
   const boot = () => {
     setError(undefined)
-    Promise.all([api.me(), api.disclaimer(), api.notice()])
-      .then(([m, d, n]) => { setMe(m); setDisclaimer(d); setNotice(n) })
+    Promise.all([api.me(), api.disclaimer(), api.notice(), api.authConfig()])
+      .then(([m, d, n, auth]) => { setMe(m); setDisclaimer(d); setNotice(n); setAuthMode(auth.mode) })
       .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Could not reach the service'))
   }
   useEffect(boot, [])
@@ -33,12 +36,12 @@ export function App() {
   const state = useMemo<AppState | undefined>(() => {
     if (!me) return undefined
     return {
-      me, mode, setMode, disclaimer, isMock: api.isMock, screen,
+      me, setMe, mode, setMode, disclaimer, isMock: api.isMock, authMode, screen,
       go: (s) => { setScreen(s); if (s !== 'assessments') setOpenId(null) },
       openId, openAssessment: (id) => { setOpenId(id); if (id) setScreen('assessments') },
       canWrite: me.role !== 'viewer',
     }
-  }, [me, mode, disclaimer, screen, openId])
+  }, [me, mode, disclaimer, authMode, screen, openId])
 
   if (error) return <div className="flex h-full items-center justify-center"><ErrorState message={error} onRetry={boot} /></div>
   if (!state) return <div className="mx-auto max-w-3xl pt-16"><SkeletonRows rows={5} /></div>
@@ -68,6 +71,8 @@ export function App() {
                 {state.screen === 'assessments' && <AssessmentsScreen />}
                 {state.screen === 'evidence' && <EvidenceScreen />}
                 {state.screen === 'audit' && <AuditScreen />}
+                {state.screen === 'settings' && <SettingsScreen />}
+                {state.screen === 'help' && <HelpScreen />}
               </div>
             </main>
           </div>

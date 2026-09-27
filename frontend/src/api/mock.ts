@@ -168,6 +168,10 @@ SEED_INPUTS.forEach((input, i) => {
   addAudit(a, 'dr.rao@example.org')
 })
 
+// A Settings-screen "switch role" call overrides the ?role= URL param for the rest of the
+// session (mirrors the real backend's dev-login cookie, without needing a server round trip).
+let identityOverride: Me | null = null
+
 function currentRole(): Role {
   const r = new URLSearchParams(window.location.search).get('role')
   return r === 'viewer' || r === 'admin' ? r : 'clinician'
@@ -180,6 +184,7 @@ function requireWrite(): Me {
 }
 
 function meNow(): Me {
+  if (identityOverride) return identityOverride
   const role = currentRole()
   return { email: `${role}@example.org`, name: role === 'admin' ? 'Admin User' : role === 'viewer' ? 'Examiner (read-only)' : 'Dr. A. Rao', role }
 }
@@ -187,6 +192,12 @@ function meNow(): Me {
 export const mockApi: Api = {
   isMock: true,
   async me() { await wait(120); return meNow() },
+  async authConfig() { return { mode: 'mock' } },
+  async devLogin(name, role) {
+    await wait(200)
+    identityOverride = { email: meNow().email, name: name.trim() || 'Dev User', role }
+    return identityOverride
+  },
   async disclaimer() { return DISCLAIMER },
   async notice() { return null },
   async createAssessment(input, mode) {
