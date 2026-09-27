@@ -12,7 +12,11 @@
   --color-sky: #0EA5E9; --color-sky-bg: #F0F9FF;
   --color-bg-subtle: #FBFBFB; --color-scrim: rgba(15,23,42,.4);
   --color-muted: #94A3B8; --color-muted-bg: #F8FAFC;
-  --color-text-primary: #0F172A; --color-text-secondary: #5B6779; --color-text-tertiary: #94A3B8;
+  /* text-secondary: was #5B6779 (~5.5:1 on white in theory), but that sat close enough to the
+     AA 4.5:1 line that font-rendering differences between Windows and Linux Chromium flipped an
+     axe color-contrast check pass/fail on the exact same code (real CI incident, 2026-09-27).
+     #475569 gives ~7.5:1 — enough headroom that sub-pixel rendering differences can't matter. */
+  --color-text-primary: #0F172A; --color-text-secondary: #475569; --color-text-tertiary: #94A3B8;
   --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px; --space-6: 24px; --space-8: 32px;
   --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px; --radius-xl: 16px; --radius-pill: 999px;
   --shadow-sm: 0 1px 2px rgba(0,0,0,.05); --shadow-md: 0 4px 12px rgba(0,0,0,.08);
